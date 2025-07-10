@@ -1,7 +1,15 @@
 #!/bin/bash
 
-# URL chứa danh sách node-id
-NODE_URL="https://raw.githubusercontent.com/lucduong2406/SCREEN/refs/heads/main/A1"
+# URL mặc định nếu không cung cấp tham số
+DEFAULT_NODE_URL="https://raw.githubusercontent.com/lucduong2406/SCREEN/refs/heads/main/A1"
+
+# Kiểm tra tham số URL
+if [ -z "$1" ]; then
+    NODE_URL="$DEFAULT_NODE_URL"
+    echo "Không có URL được cung cấp. Sử dụng URL mặc định: $NODE_URL"
+else
+    NODE_URL="$1"
+fi
 
 # Kiểm tra và cài đặt screen nếu chưa có
 if ! command -v screen &> /dev/null; then
