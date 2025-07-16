@@ -79,7 +79,7 @@ for i in "${!node_array[@]}"; do
     screen -dmS "$screen_name"
     
     # Gửi lệnh vào cửa sổ screen
-    screen -S "$screen_name" -X stuff "nexus-network start --node-id $node_id\n"
+    screen -S "$screen_name" -X stuff "./nexus-network start --node-id $node_id\n"
     
     echo "Đã tạo cửa sổ screen $screen_name với node-id $node_id"
 done
