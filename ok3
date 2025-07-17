@@ -1,41 +1,36 @@
 #!/bin/bash
 
+# Đường dẫn đến file cấu hình lưu URL
+CONFIG_FILE="node_url.conf"
+
 # URL mặc định
 DEFAULT_NODE_URL="https://raw.githubusercontent.com/lucduong2406/SCREEN/refs/heads/main/A1"
+
+# Kiểm tra xem file cấu hình có tồn tại và lấy URL từ đó
+if [ -f "$CONFIG_FILE" ]; then
+    NODE_URL=$(cat "$CONFIG_FILE")
+    echo "Sử dụng URL từ file cấu hình: $NODE_URL"
+else
+    NODE_URL="$DEFAULT_NODE_URL"
+    echo "Không tìm thấy file cấu hình, sử dụng URL mặc định: $NODE_URL"
+fi
 
 # Kiểm tra tham số URL
 if [ -n "$1" ]; then
     NODE_URL="$1"
     echo "Sử dụng URL từ tham số: $NODE_URL"
-    # Hỏi người dùng có muốn lưu URL vào script không
-    read -p "Bạn có muốn lưu URL này ($NODE_URL) làm URL mặc định trong script không? (y/n): " save_url
-    if [[ "$save_url" =~ ^[Yy]$ ]]; then
-        sed -i "s|DEFAULT_NODE_URL=.*|DEFAULT_NODE_URL=\"$NODE_URL\"|" "$0"
-        if [ $? -eq 0 ]; then
-            echo "Đã lưu URL $NODE_URL làm URL mặc định trong script."
-        else
-            echo "Lỗi khi lưu URL vào script. Vui lòng kiểm tra."
-        fi
-    fi
+    # Lưu URL vào file cấu hình
+    echo "$NODE_URL" > "$CONFIG_FILE"
+    echo "Đã lưu URL vào $CONFIG_FILE"
 else
     # Hỏi người dùng nhập URL
-    read -p "Nhập URL chứa danh sách node-id (nhấn Enter để dùng mặc định: $DEFAULT_NODE_URL): " input_url
-    if [ -z "$input_url" ]; then
-        NODE_URL="$DEFAULT_NODE_URL"
-        echo "Sử dụng URL mặc định: $NODE_URL"
-    else
+    read -p "Nhập URL chứa danh sách node-id (nhấn Enter để dùng hiện tại: $NODE_URL): " input_url
+    if [ -n "$input_url" ]; then
         NODE_URL="$input_url"
         echo "Sử dụng URL do người dùng cung cấp: $NODE_URL"
-        # Hỏi người dùng có muốn lưu URL vào script không
-        read -p "Bạn có muốn lưu URL này ($NODE_URL) làm URL mặc định trong script không? (y/n): " save_url
-        if [[ "$save_url" =~ ^[Yy]$ ]]; then
-            sed -i "s|DEFAULT_NODE_URL=.*|DEFAULT_NODE_URL=\"$NODE_URL\"|" "$0"
-            if [ $? -eq 0 ]; then
-                echo "Đã lưu URL $NODE_URL làm URL mặc định trong script."
-            else
-                echo "Lỗi khi lưu URL vào script. Vui lòng kiểm tra."
-            fi
-        fi
+        # Lưu URL vào file cấu hình
+        echo "$NODE_URL" > "$CONFIG_FILE"
+        echo "Đã lưu URL vào $CONFIG_FILE"
     fi
 fi
 
@@ -89,4 +84,19 @@ for i in "${!node_array[@]}"; do
     screen_name="N$((i+1))"
     node_id="${node_array[i]}"
     
-    # Kiểm tra node-id có hợp lệ không (không rỗng và là
+    # Kiểm tra node-id có hợp lệ không (không rỗng và là số)
+    if [[ -z "$node_id" || ! "$node_id" =~ ^[0-9]+$ ]]; then
+        echo "Bỏ qua node-id không hợp lệ: $node_id"
+        continue
+    fi
+    
+    # Tạo cửa sổ screen mới với tên screen_name
+    screen -dmS "$screen_name"
+    
+    # Gửi lệnh vào cửa sổ screen
+    screen -S "$screen_name" -X stuff "./nexus-network start --node-id $node_id\n"
+    
+    echo "Đã tạo cửa sổ screen $screen_name với node-id $node_id"
+done
+
+echo "Hoàn tất! Sử dụng 'screen -ls' để xem danh sách các cửa sổ screen."
